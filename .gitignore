@@ -4,8 +4,11 @@
 # Log file
 *.log
 
+# idea folder
+.idea
+
 # Ignore folders with .model in the name
-*/*.model/
+*.model
 
 # BlueJ files
 *.ctxt
