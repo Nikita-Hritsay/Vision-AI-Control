@@ -4,6 +4,9 @@
 # Log file
 *.log
 
+# Ignore folders with .model in the name
+*/*.model/
+
 # BlueJ files
 *.ctxt
 
