@@ -4,19 +4,22 @@ from pathlib import Path
 import numpy as np
 from tensorflow.keras import layers, models
 from sklearn.preprocessing import LabelEncoder
+from examples.cut_face import cut_face
 
 def create_model():
     images = []
     image_labels = []
+    direction_names = ["down", "left", "right", "up"]
 
     label_encoder = LabelEncoder()
     path = "./eyeTrainDataset"
-
+    target_size = (240, 240)
+    
     for p in Path(path).glob("*.png"):
-
-        ## Todo cut face to train only on face parts and notfull images
-        images.append(cv2.imread(str(p)))
-        image_labels.append(str(p.stem))
+        img = cut_face(str(p), False)
+        resized_img = cv2.resize(img, target_size)
+        images.append(resized_img)
+        image_labels.append(str(p.stem).split(" ")[0])
 
     images = np.array(images)
     image_labels = label_encoder.fit_transform(image_labels)
@@ -27,10 +30,9 @@ def create_model():
         model = models.load_model(model_path)
         print("Model loaded successfully.")
     else:
-
         model = models.Sequential()
 
-        model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(720, 1280, 3)))
+        model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(240, 240, 3)))
         model.add(layers.MaxPooling2D((2,2)))
         model.add(layers.Conv2D(64, (3, 3), activation='relu'))
         model.add(layers.MaxPooling2D((2,2)))
@@ -45,15 +47,15 @@ def create_model():
 
         model.save("gazeBasicClassification.model")
 
-    test_image = cv2.resize(cv2.imread("./eyeTrainDataset/down.png"), (1280, 720))
-    test_image = np.expand_dims(test_image, axis=0)  # Add an extra dimension
+    test_image = cut_face("./eyeTrainDataset/down 0.png", False)
+    test_image = cv2.resize(test_image, target_size)
+    test_image = np.expand_dims(test_image, axis=0)
 
     test = model.predict(test_image)
 
     index = np.argmax(test)
 
-    print(f"Prediction {image_labels[index]}")
-    
+    print(f"Prediction {direction_names[index]}")
 
     return model
 
@@ -63,8 +65,6 @@ if __name__ == "__main_":
     face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
     eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_eye.xml')
     cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
-
-
 
     while True:
         ret, frame = cap.read()
