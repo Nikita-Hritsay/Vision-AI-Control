@@ -8,9 +8,8 @@ def image_classification_using_tensorflow():
 
     training_images, testing_images = training_images / 255, testing_images / 255
 
-
     class_names = ['Plane', 'Car', 'Bird', 'Cat', 'Deer', 'Dog', 'Frog', 'Hor`se', 'Ship', 'Truck']
-
+    
     for i in range(16):
         plt.subplot(4, 4, i+1)
         plt.xticks([])
@@ -18,8 +17,11 @@ def image_classification_using_tensorflow():
         plt.imshow(training_images[i], cmap=plt.cm.binary)
         plt.xlabel(class_names[training_labels[i][0]])
         
-    plt.show()
+    #plt.show()
 
+    print(type(training_images))
+    print(type(training_labels))
+    print(type(training_images[0]))
 
     training_images = training_images[:20000]
     training_labels = training_labels[:20000]
