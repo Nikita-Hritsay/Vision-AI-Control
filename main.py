@@ -4,39 +4,46 @@ from pathlib import Path
 import numpy as np
 from tensorflow.keras import layers, models
 from sklearn.preprocessing import LabelEncoder
-from examples.cut_face import cut_face
+from utils.cut_face import cut_eye_from_file, cut_eye
 
-def create_model():
-    images = []
-    image_labels = []
-    direction_names = ["down", "left", "right", "up"]
+TARGET_SIZE = (240, 240)
+DIRECTION_NAMES = ["down", "left", "right", "up"]
 
-    label_encoder = LabelEncoder()
-    path = "./eyeTrainDataset"
-    target_size = (240, 240)
-    
-    for p in Path(path).glob("*.png"):
-        img = cut_face(str(p), False)
-        resized_img = cv2.resize(img, target_size)
-        images.append(resized_img)
-        image_labels.append(str(p.stem).split(" ")[0])
 
-    images = np.array(images)
-    image_labels = label_encoder.fit_transform(image_labels)
-
+def create_model(test = False):
     model_path = "gazeBasicClassification.model"
 
     if os.path.exists(model_path):
         model = models.load_model(model_path)
         print("Model loaded successfully.")
+        print("======\n\n\n\n")
     else:
+        images = []
+        image_labels = []
+
+        label_encoder = LabelEncoder()
+        path = "./eyeTrainDataset"
+    
+        for p in Path(path).glob("*.png"):
+            img = cut_eye_from_file(str(p), False)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            resized_img = cv2.resize(img, TARGET_SIZE)
+            resized_img = resized_img / 255.0
+            normalized_img = (resized_img - np.mean(resized_img)) / np.std(resized_img)
+            images.append(normalized_img)
+            image_labels.append(str(p.stem).split(" ")[0])
+
+        images = np.array(images)
+        images = np.expand_dims(images, axis=-1)
+        image_labels = label_encoder.fit_transform(image_labels)
+
         model = models.Sequential()
 
-        model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(240, 240, 3)))
+        model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(240, 240, 1)))
         model.add(layers.MaxPooling2D((2,2)))
         model.add(layers.Conv2D(64, (3, 3), activation='relu'))
         model.add(layers.MaxPooling2D((2,2)))
-        model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+        model.add(layers.Conv2D(128, (3, 3), activation='relu'))
         model.add(layers.Flatten())
         model.add(layers.Dense(64, activation='relu'))
         model.add(layers.Dense(4, activation='softmax'))
@@ -47,44 +54,51 @@ def create_model():
 
         model.save("gazeBasicClassification.model")
 
-    test_image = cut_face("./eyeTrainDataset/down 0.png", False)
-    test_image = cv2.resize(test_image, target_size)
-    test_image = np.expand_dims(test_image, axis=0)
+    if test:
+        test_image = cut_eye_from_file("./eyeTrainDataset/left 2.png", False)
+        test_image = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
+        test_image = cv2.resize(test_image, TARGET_SIZE)
+        test_image = test_image / 255.0
+        normalized_img = (resized_img - np.mean(test_image)) / np.std(test_image)
+        normalized_img = np.expand_dims(normalized_img, axis=0)
 
-    test = model.predict(test_image)
+        test = model.predict(normalized_img)
 
-    index = np.argmax(test)
+        index = np.argmax(test)
 
-    print(f"Prediction {direction_names[index]}")
+        print(f"Prediction: {DIRECTION_NAMES[index]}")
 
     return model
 
-create_model()
-
-if __name__ == "__main_":
-    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-    eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_eye.xml')
+if __name__ == "__main__":
     cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+    
+    model = create_model(False)
+    prediction = 0
 
     while True:
         ret, frame = cap.read()
-
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-        faces = face_cascade.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=5)
-
-        for (x, y, w, h) in faces:
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
-
-            roi_gray = gray[y:y + h, x:x + w]
-            roi_color = frame[y:y + h, x:x + w]
-
-            eyes = eye_cascade.detectMultiScale(roi_gray)
-
-            for (ex, ey, ew, eh) in eyes:
-                cv2.circle(roi_color, (ex + ew // 2, ey + eh // 2), 10, (0, 255, 0), 1)
-
         cv2.imshow('Eye Tracking', frame)
+
+        eye = cut_eye(frame, False)
+
+        if len(eye) > 0:
+            gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            gray_frame = cv2.resize(gray_frame, TARGET_SIZE)
+            gray_frame = gray_frame / 255.0
+            normalized_img = (gray_frame - np.mean(gray_frame)) / np.std(gray_frame)
+            normalized_img = np.expand_dims(normalized_img, axis=0)
+
+            prediction = model.predict(normalized_img)
+
+            index = np.argmax(prediction)
+
+            print(f"Predicton values: {prediction}")
+
+            print(f"Predicton value: {index}")
+
+            print(f"Prediction: {DIRECTION_NAMES[index]}")
+
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break

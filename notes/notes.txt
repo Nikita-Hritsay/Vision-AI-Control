@@ -1,0 +1,13 @@
+UPDATE IT TO README FILE
+
+
+
+modules:
+    - Eye-tracking module - tracks eyes and identifies the direction where user is watching;
+    - Speech recognition module - using speech inputs information;
+    - User interface - customization of user input (clip twice to click left mouse button, three times to right button, or other customization);
+
+User Workflow:
+	- user starts the program and there appears a square and the point where user is looking;
+	- if user clips twice - the it will tap left button of the mouse there;
+	- if user clips three times - right button;
