@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 from tensorflow.keras import layers, models
 from sklearn.preprocessing import LabelEncoder
-from utils.cut_face import cut_eye_from_file, cut_eye
+from utils.cut_eyes import cut_eye_from_file, cut_eye
 
 TARGET_SIZE = (240, 240)
 DIRECTION_NAMES = ["down", "left", "right", "up"]
