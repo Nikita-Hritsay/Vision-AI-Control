@@ -1,6 +1,9 @@
 UPDATE IT TO README FILE
 
 
+TODO:
+    - adjust the model to make better predications;
+
 
 modules:
     - Eye-tracking module - tracks eyes and identifies the direction where user is watching;
