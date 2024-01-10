@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 def create_model(TARGET_SIZE, DIRECTION_NAMES, test = False):
     model_path = "eyeDirectionClassification.model"
 
+    #checking if model already exists
     if os.path.exists(model_path):
         model = models.load_model(model_path)
         print("Model loaded successfully.")
@@ -17,11 +18,11 @@ def create_model(TARGET_SIZE, DIRECTION_NAMES, test = False):
     else:
         images = []
         image_labels = []
-        i = 0
 
         label_encoder = LabelEncoder()
         path = "./eyeTrainDataset"
     
+        # taking all the images in directory, applaying color filter, normalizing, resizing and adding to the list
         for p in Path(path).glob("*.png"):
             img = cut_eye_from_file(str(p), False)
             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -35,6 +36,7 @@ def create_model(TARGET_SIZE, DIRECTION_NAMES, test = False):
         images = np.expand_dims(images, axis=-1)
         image_labels = label_encoder.fit_transform(image_labels)
 
+        # creating model
         model = models.Sequential()
 
         model.add(layers.Conv2D(32, (10, 10), activation='relu', input_shape=(240, 240, 1)))
@@ -51,10 +53,13 @@ def create_model(TARGET_SIZE, DIRECTION_NAMES, test = False):
 
         model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 
+        # training model
         model.fit(images, image_labels, epochs=20)
 
+        # saving model to the folder
         model.save(model_path)
 
+    # testing model on the image. Image to test can be selected from any image in directory or new one can be created 
     if test:
         test_image = cut_eye_from_file("./eyeTrainDataset/left 2.png", False)
         test_image = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)

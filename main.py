@@ -4,12 +4,14 @@ import matplotlib.pyplot as plt
 from utils.cut_eyes import cut_eye
 from utils.eyeDiractionClassificationModel import create_model
 
+# target size of the cut eye image that is used to predict in the model
 TARGET_SIZE = (240, 240)
+# vatiations of 4 main directions that can be predicted
 DIRECTION_NAMES = ["down", "left", "right", "up"]
 
 if __name__ == "__main__":    
+    # creating model 
     model = create_model(TARGET_SIZE, DIRECTION_NAMES, False)
-    prediction = 0
     frame_count = 0
     i = 0
 
@@ -25,6 +27,7 @@ if __name__ == "__main__":
             frame_count = 0
             i += 1
 
+            # cutting eye from the frame
             eye = cut_eye(frame, False)
 
             if len(eye) > 0:
@@ -37,6 +40,7 @@ if __name__ == "__main__":
 
                 prediction_index = np.argmax(prediction)
 
+                # craeting subplot to show the results of predictions on the plot
                 plt.subplot(4, 4, i+1)
                 plt.xticks([])
                 plt.yticks([])
