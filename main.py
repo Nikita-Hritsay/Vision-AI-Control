@@ -2,21 +2,22 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from utils.cut_eyes import cut_eye
-from utils.eyeDiractionClassificationModel import create_model
+from utils.eyeDiractionClassificationModel import EyeDirectionClassificationModel
 
 # target size of the cut eye image that is used to predict in the model
 TARGET_SIZE = (240, 240)
 # vatiations of 4 main directions that can be predicted
 DIRECTION_NAMES = ["down", "left", "right", "up"]
+# change to 0 if only one camera is available 
+VIDEO_CAPTURE_PORT = 1
 
-if __name__ == "__main__":    
+def run_eye_tracking():
     # creating model 
-    model = create_model(TARGET_SIZE, DIRECTION_NAMES, False)
+    model = EyeDirectionClassificationModel(TARGET_SIZE, DIRECTION_NAMES, False)
     frame_count = 0
-    i = 0
+    frame_index = 0
 
-    # change to 0 if only one camera is available 
-    cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+    cap = cv2.VideoCapture(VIDEO_CAPTURE_PORT, cv2.CAP_DSHOW)
 
     while True:
         ret, frame = cap.read()
@@ -25,7 +26,7 @@ if __name__ == "__main__":
 
         if frame_count == 10:
             frame_count = 0
-            i += 1
+            frame_index += 1
 
             # cutting eye from the frame
             eye = cut_eye(frame, False)
@@ -41,10 +42,10 @@ if __name__ == "__main__":
                 prediction_index = np.argmax(prediction)
 
                 # craeting subplot to show the results of predictions on the plot
-                plt.subplot(4, 4, i+1)
+                plt.subplot(4, 4, frame_index+1)
                 plt.xticks([])
                 plt.yticks([])
-                plt.imshow(np.squeeze(normalized_img), cmap=plt.cm.binary)
+                plt.imshow(np.squeeze(eye), cmap=plt.cm.binary)
                 plt.xlabel(DIRECTION_NAMES[prediction_index])
 
                 print(f"Prediction: {DIRECTION_NAMES[prediction_index]}  {prediction}")
@@ -57,3 +58,6 @@ if __name__ == "__main__":
 
     cap.release()
     cv2.destroyAllWindows()
+
+if __name__ == "__main__":    
+    run_eye_tracking()
