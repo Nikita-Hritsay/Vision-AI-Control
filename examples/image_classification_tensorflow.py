@@ -54,5 +54,3 @@ def image_classification_using_tensorflow():
 
     ## to get the trained model we can use this
     ## model = models.load_model("image_classification.model")
-
-image_classification_using_tensorflow()

@@ -5,8 +5,8 @@ eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_eye.xml
 
 ## function that cuts image by eye countor from image file
 def cut_eye_from_file(path, showResult = True):
-    frame = cv2.imread(str(path), cv2.CAP_DSHOW)
-    return cut_eye( frame, showResult)
+    image = cv2.imread(str(path))
+    return cut_eye(image, showResult)
 
 
 ## for better separating - gray color should be used in the picture (cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
